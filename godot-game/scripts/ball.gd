@@ -1,13 +1,14 @@
 extends Node2D
 
-## Placeholder ball (drawn circle — no art asset yet). Kinematic Pong physics:
-## bounces off top/bottom walls and the two paddles, deflecting by where it hits
-## the paddle. Emits goal_scored when it crosses a goal line. In demo mode
-## (attract screen) it bounces off the left/right walls instead of scoring.
+## The ball (assets/ball.png). Kinematic Pong physics: bounces off top/bottom
+## walls and the two paddles, deflecting by where it hits the paddle. Emits
+## goal_scored when it crosses a goal line. In demo mode (attract screen) it
+## bounces off the left/right walls instead of scoring.
 
 signal goal_scored(player: int)  # the player who scored
 
-const RADIUS := 16.0
+const RADIUS := 16.0            # collision radius (gameplay)
+const SPRITE_DIAMETER := 46.0   # on-screen size of the ball image
 const BASE_SPEED := 430.0
 const MAX_SPEED := 820.0
 const SPEEDUP := 1.05
@@ -16,6 +17,8 @@ const MAX_DEFLECT_DEG := 50.0
 var velocity := Vector2.ZERO
 var active := false
 var demo := false
+
+var _sprite: Sprite2D
 
 var bounds_top := 0.0
 var bounds_bottom := 0.0
@@ -34,9 +37,13 @@ func configure(top: float, bottom: float, left_x: float, right_x: float, c: Vect
 	center = c
 	paddles = paddle_nodes
 
-func _draw() -> void:
-	draw_circle(Vector2.ZERO, RADIUS, Color.WHITE)
-	draw_circle(Vector2.ZERO, RADIUS * 0.55, Color(0.85, 0.2, 0.15))  # tiny accent
+func _ready() -> void:
+	_sprite = Sprite2D.new()
+	_sprite.texture = load("res://assets/ball.png")
+	var tex_w := _sprite.texture.get_size().x
+	if tex_w > 0:
+		_sprite.scale = Vector2.ONE * (SPRITE_DIAMETER / tex_w)
+	add_child(_sprite)
 
 ## Place the ball at center and serve toward `direction` (-1 left, +1 right).
 func serve(direction: int) -> void:
@@ -50,6 +57,8 @@ func _physics_process(delta: float) -> void:
 	if not active:
 		return
 	position += velocity * delta
+	if _sprite:
+		_sprite.rotation += velocity.x * delta * 0.03  # gentle roll
 
 	# Top / bottom walls.
 	if position.y < bounds_top:
