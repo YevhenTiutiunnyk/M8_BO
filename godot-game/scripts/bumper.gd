@@ -12,12 +12,15 @@ var _sprite: Sprite2D
 var _widen_timer := 0.0
 
 ## Build the visual from a texture, sized to the desired paddle footprint.
-func setup(texture: Texture2D, paddle_w: float, paddle_h: float) -> void:
+## `rotate180` faces the figure the other way (used for the right-side player).
+func setup(texture: Texture2D, paddle_w: float, paddle_h: float, rotate180 := false) -> void:
 	half_width = paddle_w * 0.5
 	half_height = paddle_h * 0.5
 	_normal_half_height = half_height
 	_sprite = Sprite2D.new()
 	_sprite.texture = texture
+	if rotate180:
+		_sprite.rotation_degrees = 180.0
 	add_child(_sprite)
 	_apply_sprite_scale(paddle_w, paddle_h)
 

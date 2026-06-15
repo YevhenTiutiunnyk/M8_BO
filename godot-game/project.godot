@@ -1,6 +1,10 @@
 ; Engine configuration file.
-; Betondorp Pong-football (Loop 2 — the game). See ../plan.md and
-; ../docs/superpowers/specs/2026-06-08-godot-game-design.md
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
 
 config_version=5
 
@@ -21,8 +25,6 @@ InputHub="*res://scripts/input_hub.gd"
 window/size/viewport_width=1280
 window/size/viewport_height=720
 window/stretch/mode="canvas_items"
-window/stretch/aspect="keep"
-window/size/mode=0
 
 [input]
 

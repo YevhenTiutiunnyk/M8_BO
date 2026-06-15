@@ -68,11 +68,12 @@ func _build_paddles() -> void:
 	var half_h := PADDLE_H * 0.5
 	_travel_top = FIELD_TOP + half_h
 	_travel_bottom = FIELD_BOTTOM - half_h
-	for x in [P1_X, P2_X]:
+	var xs := [P1_X, P2_X]
+	for i in xs.size():
 		var b = BumperScript.new()
 		add_child(b)
-		b.setup(johan, PADDLE_W, PADDLE_H)
-		b.position = Vector2(x, VIEW.y * 0.5)
+		b.setup(johan, PADDLE_W, PADDLE_H, i == 1)  # right player faces the other way
+		b.position = Vector2(xs[i], VIEW.y * 0.5)
 		_paddles.append(b)
 
 func _build_ball() -> void:
