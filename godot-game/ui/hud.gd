@@ -67,6 +67,8 @@ func _build_scoreboard() -> void:
 	_board = TextureRect.new()
 	_board.texture = load("res://assets/scoreboard.png")
 	_board.stretch_mode = TextureRect.STRETCH_SCALE
+	# Ignore the texture's native 1514px size; the rect we set below is the size.
+	_board.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_board.set_anchors_preset(Control.PRESET_TOP_LEFT)  # explicit offsets only
 	_board.offset_left = (VIEW_W - BOARD_W) * 0.5
 	_board.offset_right = _board.offset_left + BOARD_W
