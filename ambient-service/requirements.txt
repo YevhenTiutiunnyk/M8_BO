@@ -1,0 +1,9 @@
+# Raspberry Pi hardware dependencies for the ambient theater service.
+# NOT needed on a laptop running `python3 service.py --fake` (the fakes use only
+# the standard library). Install on the Pi:  pip install -r requirements.txt
+
+gpiozero>=2.0            # ball sensor (DigitalInputDevice) + door servo (AngularServo)
+lgpio>=0.2              # gpiozero pin backend for Raspberry Pi 5 (use RPi.GPIO on Pi 4)
+adafruit-circuitpython-neopixel>=6.3   # WS2812B NeoPixel strip
+adafruit-blinka>=8.0    # board/digitalio backend for neopixel
+# Sound playback uses ALSA's `aplay` (alsa-utils), not a Python package.
