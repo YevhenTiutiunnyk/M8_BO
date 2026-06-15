@@ -10,9 +10,9 @@ extends CanvasLayer
 const WHITE := Color(0.97, 0.97, 0.97)
 
 # Scoreboard size/placement (logical 1280x720). Texture is 1514x223 (aspect ~6.79).
-const BOARD_W := 620.0
-const BOARD_H := 91.0   # 620 / 6.789
-const BOARD_TOP := 12.0
+const BOARD_W := 430.0
+const BOARD_H := 63.0   # 430 / 6.789
+const BOARD_TOP := 10.0
 # Horizontal regions within the board, as fractions of its width.
 const LEFT_RED := [0.04, 0.33]
 const CENTER_BLUE := [0.345, 0.655]
@@ -39,13 +39,13 @@ func _ready() -> void:
 
 	_build_scoreboard()
 
-	_half = _make_label(24, HORIZONTAL_ALIGNMENT_CENTER)
+	_half = _make_label(20, HORIZONTAL_ALIGNMENT_CENTER)
 	_half.anchor_left = 0.0; _half.anchor_right = 1.0
-	_half.offset_top = BOARD_TOP + BOARD_H + 18; _half.offset_bottom = BOARD_TOP + BOARD_H + 56
+	_half.offset_top = BOARD_TOP + BOARD_H + 10; _half.offset_bottom = BOARD_TOP + BOARD_H + 42
 
-	_cruijff = _make_label(22, HORIZONTAL_ALIGNMENT_CENTER)
+	_cruijff = _make_label(18, HORIZONTAL_ALIGNMENT_CENTER)
 	_cruijff.anchor_left = 0.0; _cruijff.anchor_right = 1.0
-	_cruijff.offset_top = BOARD_TOP + BOARD_H + 56; _cruijff.offset_bottom = BOARD_TOP + BOARD_H + 94
+	_cruijff.offset_top = BOARD_TOP + BOARD_H + 42; _cruijff.offset_bottom = BOARD_TOP + BOARD_H + 74
 
 	_attract = _make_label(40, HORIZONTAL_ALIGNMENT_CENTER)
 	_attract.anchor_left = 0.0; _attract.anchor_right = 1.0
@@ -74,11 +74,11 @@ func _build_scoreboard() -> void:
 	_board.offset_bottom = BOARD_TOP + BOARD_H
 	_root.add_child(_board)
 
-	_p1_name = _make_region_label(28, LEFT_RED)
+	_p1_name = _make_region_label(19, LEFT_RED)
 	_p1_name.text = "SPELER 1"
-	_p2_name = _make_region_label(28, RIGHT_RED)
+	_p2_name = _make_region_label(19, RIGHT_RED)
 	_p2_name.text = "SPELER 2"
-	_score = _make_region_label(40, CENTER_BLUE)
+	_score = _make_region_label(28, CENTER_BLUE)
 	_score.text = "0 - 0"
 
 ## A label parented to the scoreboard, spanning a horizontal region (fractions of
