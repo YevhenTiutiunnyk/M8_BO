@@ -7,7 +7,10 @@ extends CanvasLayer
 ## no external scene dependencies; the Game Artist can restyle behind the same
 ## method calls.
 
+signal story_typed  # emitted once the current story sentence finishes typing
+
 const WHITE := Color(0.97, 0.97, 0.97)
+const STORY_CPS := 50.0  # typewriter speed (characters per second)
 
 # Scoreboard size/placement (logical 1280x720). Texture is 1514x223 (aspect ~6.79).
 const BOARD_W := 430.0
@@ -29,6 +32,10 @@ var _attract: Label
 var _banner: Label
 var _result: Label
 var _banner_timer := 0.0
+var _story_dim: ColorRect
+var _story_label: Label
+var _story_typing := false
+var _story_chars := 0.0
 
 func _ready() -> void:
 	# Full-screen container so all child anchors resolve against the viewport.
@@ -61,6 +68,25 @@ func _ready() -> void:
 	_result.anchor_left = 0.0; _result.anchor_right = 1.0
 	_result.offset_top = 280; _result.offset_bottom = 440
 	_result.visible = false
+
+	_build_story()
+
+func _build_story() -> void:
+	# Full-screen dim behind the story text so the pitch recedes.
+	_story_dim = ColorRect.new()
+	_story_dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_story_dim.color = Color(0.04, 0.05, 0.04, 0.78)
+	_story_dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_story_dim.visible = false
+	_root.add_child(_story_dim)
+
+	_story_label = _make_label(30, HORIZONTAL_ALIGNMENT_CENTER)
+	_story_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_story_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_story_label.anchor_left = 0.0; _story_label.anchor_right = 1.0
+	_story_label.offset_left = 130; _story_label.offset_right = -130
+	_story_label.offset_top = 170; _story_label.offset_bottom = 550
+	_story_label.visible = false
 
 func _build_scoreboard() -> void:
 	const VIEW_W := 1280.0
@@ -122,6 +148,7 @@ func show_attract() -> void:
 	_cruijff.visible = false
 	_result.visible = false
 	_banner.visible = false
+	hide_story()
 
 func show_match() -> void:
 	_attract.visible = false
@@ -148,14 +175,39 @@ func show_result(winner: int) -> void:
 	_half.visible = false
 	_cruijff.visible = false
 	_banner.visible = false
+	hide_story()
 	_result.visible = true
 	if winner == 0:
 		_result.text = "Gelijkspel!"
 	else:
 		_result.text = "Speler %d wint!" % winner
 
+## Show one story sentence and type it out character by character.
+func start_story(text: String) -> void:
+	_story_label.text = text
+	_story_label.visible_characters = 0
+	_story_chars = 0.0
+	_story_typing = true
+	_story_dim.visible = true
+	_story_label.visible = true
+
+func hide_story() -> void:
+	_story_typing = false
+	_story_dim.visible = false
+	_story_label.visible = false
+
 func _process(delta: float) -> void:
 	if _banner_timer > 0.0:
 		_banner_timer -= delta
 		if _banner_timer <= 0.0:
 			_banner.visible = false
+
+	if _story_typing:
+		_story_chars += delta * STORY_CPS
+		var total := _story_label.text.length()
+		var n := int(_story_chars)
+		if n >= total:
+			n = total
+			_story_typing = false
+			story_typed.emit()
+		_story_label.visible_characters = n

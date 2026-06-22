@@ -30,7 +30,17 @@ const BLOW_THRESHOLD := 0.5
 const CRUIJFF_FACTOR := 1.7
 const CRUIJFF_DURATION := 3.0
 
-enum State { ATTRACT, MATCH, RESULT }
+enum State { ATTRACT, MATCH, RESULT, STORY }
+
+const STORY_READ_HOLD := 3.0  # seconds the finished sentence stays before resuming
+
+# The Tibo / Cruijff ball story, one sentence revealed per goal (then it loops).
+const STORY := [
+	"Tibo — voetbal achtergelaten bij het ouderlijk huis van Johan Cruijff in Betondorp, na het overlijden op 24 maart 2016.",
+	"\"Voor Johan Cruijff van Tibo, ik had je graag willen ontmoeten.\"",
+	"Deze lieve woorden van een duidelijk zeer jonge fan van Cruijff staan op deze bal, die achtergelaten werd bij het huis in Betondorp waar Cruijff opgroeide, nadat de voetballer in 2016 was overleden.",
+	"Op twee van de vlakken van de bal tekende Tibo nog een Ajaxshirt met nummer 14, en een Barcelonashirt met nummer 9.",
+]
 
 var _state: int = State.ATTRACT
 var _match
@@ -41,6 +51,10 @@ var _travel_top := 0.0
 var _travel_bottom := 0.0
 var _time_since_activity := 0.0
 var _result_timer := 0.0
+var _story_index := -1
+var _story_hold := 0.0
+var _story_typed_done := false
+var _last_scorer := 1
 
 func _ready() -> void:
 	_match = MatchStateScript.new()
@@ -50,6 +64,7 @@ func _ready() -> void:
 	_build_hud()
 	InputHub.blow_requested.connect(_on_blow)
 	_ball.goal_scored.connect(_on_goal)
+	_hud.story_typed.connect(_on_story_typed)
 	_enter_attract()
 
 # --- Construction -----------------------------------------------------------
@@ -104,6 +119,12 @@ func _process(delta: float) -> void:
 			_result_timer -= delta
 			if _result_timer <= 0.0:
 				_enter_attract()
+		State.STORY:
+			# Paused for storytelling; resume after the sentence finishes + a hold.
+			if _story_typed_done:
+				_story_hold -= delta
+				if _story_hold <= 0.0:
+					_resume_after_story()
 
 func _update_paddles() -> void:
 	for i in _paddles.size():
@@ -121,6 +142,7 @@ func _enter_attract() -> void:
 func _start_match() -> void:
 	_state = State.MATCH
 	_match.reset()
+	_story_index = -1
 	_ball.demo = false
 	_time_since_activity = 0.0
 	_hud.show_match()
@@ -140,14 +162,30 @@ func _on_goal(player: int) -> void:
 		return
 	var r: Dictionary = _match.score_goal(player)
 	_update_score_hud()
+	_last_scorer = player
 	if r["match_over"]:
 		_enter_result()
-	elif r["half_over"]:
-		_hud.flash("Helft voor Speler %d!" % r["half_winner"])
-		_serve_after_goal(player)
 	else:
-		_hud.flash("Goal! Speler %d" % player)
-		_serve_after_goal(player)
+		# After every goal: pause and tell the next sentence of the story.
+		_enter_story()
+
+func _enter_story() -> void:
+	_state = State.STORY
+	_ball.active = false
+	_story_typed_done = false
+	_story_hold = 0.0
+	_story_index = (_story_index + 1) % STORY.size()
+	_hud.start_story(STORY[_story_index])
+
+func _on_story_typed() -> void:
+	_story_typed_done = true
+	_story_hold = STORY_READ_HOLD
+
+func _resume_after_story() -> void:
+	_hud.hide_story()
+	_state = State.MATCH
+	_time_since_activity = 0.0
+	_serve_after_goal(_last_scorer)
 
 func _serve_after_goal(scorer: int) -> void:
 	# Serve toward the player who just conceded.
