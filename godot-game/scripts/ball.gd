@@ -11,7 +11,8 @@ const RADIUS := 16.0            # collision radius (gameplay)
 const SPRITE_DIAMETER := 46.0   # on-screen size of the ball image
 const BASE_SPEED := 430.0
 const MAX_SPEED := 820.0
-const SPEEDUP := 1.05
+const SPEEDUP := 1.05            # extra speed per paddle hit
+const TIME_ACCEL := 35.0         # px/s gained per second of play (rally can't drag on)
 const MAX_DEFLECT_DEG := 50.0
 
 var velocity := Vector2.ZERO
@@ -56,6 +57,12 @@ func serve(direction: int) -> void:
 func _physics_process(delta: float) -> void:
 	if not active:
 		return
+	# Gradually accelerate during a rally so no single goal lasts forever.
+	# serve() resets _speed to BASE_SPEED, so every goal starts slow again.
+	if not demo:
+		_speed = minf(_speed + TIME_ACCEL * delta, MAX_SPEED)
+		if velocity != Vector2.ZERO:
+			velocity = velocity.normalized() * _speed
 	position += velocity * delta
 	if _sprite:
 		_sprite.rotation += velocity.x * delta * 0.03  # gentle roll
