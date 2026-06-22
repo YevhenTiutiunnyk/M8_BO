@@ -32,7 +32,10 @@ const CRUIJFF_DURATION := 3.0
 
 enum State { ATTRACT, MATCH, RESULT, STORY }
 
-const STORY_READ_HOLD := 3.0  # seconds the finished sentence stays before resuming
+# Read hold after a sentence finishes typing: a base plus time per character,
+# so longer sentences stay on screen longer.
+const STORY_HOLD_BASE := 3.0
+const STORY_HOLD_PER_CHAR := 0.05
 
 # The Tibo / Cruijff ball story, one sentence revealed per goal (then it loops).
 const STORY := [
@@ -165,21 +168,24 @@ func _on_goal(player: int) -> void:
 	_last_scorer = player
 	if r["match_over"]:
 		_enter_result()
-	else:
-		# After every goal: pause and tell the next sentence of the story.
+	elif _story_index < STORY.size() - 1:
+		# Pause and tell the next sentence — until the whole story has been told.
 		_enter_story()
+	else:
+		# Story already fully told this match: just play on.
+		_serve_after_goal(player)
 
 func _enter_story() -> void:
 	_state = State.STORY
 	_ball.active = false
 	_story_typed_done = false
 	_story_hold = 0.0
-	_story_index = (_story_index + 1) % STORY.size()
+	_story_index += 1
 	_hud.start_story(STORY[_story_index])
 
 func _on_story_typed() -> void:
 	_story_typed_done = true
-	_story_hold = STORY_READ_HOLD
+	_story_hold = STORY_HOLD_BASE + STORY[_story_index].length() * STORY_HOLD_PER_CHAR
 
 func _resume_after_story() -> void:
 	_hud.hide_story()
